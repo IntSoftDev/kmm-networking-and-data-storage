@@ -1,23 +1,34 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+        mavenLocal()
+    }
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.20")
+        classpath("com.android.tools.build:gradle:4.1.0")
+        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4")
+    }
+}
+
 plugins {
+    id("com.android.library")
     kotlin("multiplatform")
     kotlin("plugin.serialization")
-    id("com.android.library")
     id("kotlin-android-extensions")
     id("com.squareup.sqldelight")
+    `maven-publish`
+    id("com.jfrog.bintray") version "1.8.4"
 }
 
-group = "com.jetbrains.handson"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    gradlePluginPortal()
-    google()
-    jcenter()
-    mavenCentral()
-}
 kotlin {
+
+    android {
+        publishLibraryVariants("release", "debug")
+    }
 
     val iOSTarget: (String, KotlinNativeTarget.() -> Unit) -> KotlinNativeTarget =
         if (System.getenv("SDK_NAME")?.startsWith("iphoneos") == true)
@@ -32,8 +43,6 @@ kotlin {
             }
         }
     }
-
-    android()
 
     val ktorVersion = "1.4.0"
     val serializationVersion = "1.0.0-RC"
@@ -110,3 +119,7 @@ val packForXcode by tasks.creating(Sync::class) {
     into(targetDir)
 }
 tasks.getByName("build").dependsOn(packForXcode)
+
+apply(from = rootProject.file("evaluate.gradle"))
+apply(from = rootProject.file("pom.gradle"))
+apply(from = rootProject.file("gradle/publish.gradle"))
